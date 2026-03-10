@@ -324,8 +324,12 @@ async function graphPatch(url,body){await acquireToken();const r=await fetch(url
 async function resolveFileIds(){
   const site=await graphGet(`https://graph.microsoft.com/v1.0/sites/${spConfig.siteHost}:${spConfig.sitePath}`);
   const drives=await graphGet(`https://graph.microsoft.com/v1.0/sites/${site.id}/drives`);
-  const drive=drives.value[0];
-  const item=await graphGet(`https://graph.microsoft.com/v1.0/sites/${site.id}/drives/${drive.id}/root:${spConfig.filePath}`);
+  let item=null,drive=null;
+  for(const d of drives.value){
+    try{item=await graphGet(`https://graph.microsoft.com/v1.0/sites/${site.id}/drives/${d.id}/root:${spConfig.filePath}`);drive=d;break}
+    catch(e){continue}
+  }
+  if(!item||!drive)throw new Error(`File not found in any drive. Available drives: ${drives.value.map(d=>d.name).join(', ')}. Check your file path.`);
   graphBase=`https://graph.microsoft.com/v1.0/sites/${site.id}/drives/${drive.id}/items/${item.id}/workbook/worksheets`;
   const sheets=await graphGet(graphBase);
   const ws=sheets.value.find(s=>s.name===spConfig.sheetName);
