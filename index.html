@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UAT Dashboard — Email Triage</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+<script src="https://alcdn.msauth.net/browser/2.38.3/js.browser.min.js"></script>
+<style>
+  :root {
+    --primary-dark:#42004f;--primary-mid-light:#c1a3c7;--primary-high-light:#faddff;
+    --primary-light:#f1e9f2;--secondary:#05d5c6;--secondary-light:#e5fcfa;
+    --secondary-dark:#00c1b2;--secondary-dark-2:#00a89c;--light-bg:#f7f3ea;
+    --white:#fff;--black:#03040b;--success:#35d28b;--orange:#fb9528;--red:#de2107;
+    --light-blue:#1391d2;--dark-grey:#5c6067;--light-grey:#f5f5f9;
+    --mid-grey-2:#dddfe4;--mid-grey-3:#eaecf0;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'DM Sans','Segoe UI',sans-serif;background:var(--light-bg);color:var(--black);line-height:1.5;min-height:100vh}
+
+  /* Login */
+  .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--primary-dark) 0%,#5a1068 60%,var(--secondary-dark-2) 100%)}
+  .login-card{background:var(--white);border-radius:20px;padding:48px 40px;text-align:center;max-width:440px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+  .login-card h1{font-family:'Playfair Display',serif;font-size:28px;color:var(--primary-dark);margin-bottom:8px}
+  .login-card p{color:var(--dark-grey);font-size:14px;margin-bottom:28px}
+  .login-btn{padding:14px 32px;border-radius:10px;border:none;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;color:var(--white);background:linear-gradient(135deg,var(--primary-dark),var(--secondary-dark-2));transition:opacity 0.2s}
+  .login-btn:hover{opacity:0.9}
+  .login-label{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--secondary-dark-2);font-weight:600;margin-bottom:16px}
+  .login-error{color:var(--red);font-size:13px;margin-top:16px}
+
+  /* Config */
+  .config-panel{min-height:100vh;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--primary-dark) 0%,#5a1068 60%,var(--secondary-dark-2) 100%)}
+  .config-card{background:var(--white);border-radius:20px;padding:40px;max-width:560px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+  .config-card h2{font-family:'Playfair Display',serif;font-size:22px;color:var(--primary-dark);margin-bottom:4px}
+  .config-card .sub{color:var(--dark-grey);font-size:13px;margin-bottom:24px}
+  .config-field{margin-bottom:16px}
+  .config-field label{display:block;font-size:12px;font-weight:600;color:var(--dark-grey);margin-bottom:4px}
+  .config-field input{width:100%;padding:10px 14px;border-radius:8px;border:1px solid var(--mid-grey-2);font-size:13px;font-family:inherit}
+  .config-field .hint{font-size:11px;color:var(--dark-grey);margin-top:3px}
+  .config-actions{display:flex;gap:10px;margin-top:24px}
+  .btn-primary{padding:12px 24px;border-radius:10px;border:none;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;color:var(--white);background:linear-gradient(135deg,var(--primary-dark),var(--secondary-dark-2))}
+  .btn-secondary{padding:12px 24px;border-radius:10px;border:1px solid var(--mid-grey-2);font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;background:var(--white);color:var(--dark-grey)}
+
+  /* Header */
+  .header{background:linear-gradient(135deg,var(--primary-dark) 0%,#5a1068 60%,var(--secondary-dark-2) 100%);padding:28px 32px 0;color:var(--white)}
+  .header-inner{max-width:1200px;margin:0 auto}
+  .header-top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px}
+  .header-label{font-size:11px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--secondary);margin-bottom:6px}
+  .header h1{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;line-height:1.2}
+  .header-sub{font-size:13px;opacity:0.7;margin-top:6px}
+  .header-stats{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  .stat-box{background:rgba(255,255,255,0.12);border-radius:10px;padding:10px 16px;backdrop-filter:blur(10px);font-size:13px}
+  .stat-box .label{opacity:0.7;font-size:11px;margin-bottom:2px}
+  .stat-box .value{font-weight:700;font-size:22px}
+  .stat-box .value.teal{color:var(--secondary)}
+  .stat-box .value .of{font-size:14px;opacity:0.6}
+  .header-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .btn-header{padding:6px 14px;border-radius:6px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.1);color:var(--white);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all 0.15s}
+  .btn-header:hover{background:rgba(255,255,255,0.2)}
+  .nav-tabs{display:flex;gap:4px;margin-top:20px}
+  .nav-tab{padding:8px 20px;border-radius:8px 8px 0 0;border:none;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.7);transition:all 0.2s}
+  .nav-tab.active{background:var(--light-bg);color:var(--primary-dark)}
+  .main{max-width:1200px;margin:0 auto;padding:24px 32px 48px}
+
+  /* Loading */
+  .loading-bar{height:3px;background:var(--mid-grey-3);border-radius:3px;overflow:hidden;margin-bottom:20px}
+  .loading-bar .fill{height:100%;width:30%;background:linear-gradient(90deg,var(--secondary),var(--primary-dark));border-radius:3px;animation:loadSlide 1.2s infinite ease-in-out}
+  @keyframes loadSlide{0%{transform:translateX(-100%)}100%{transform:translateX(400%)}}
+  .sync-indicator{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600}
+  .sync-indicator.saving{background:#fff3e0;color:var(--orange)}
+  .sync-indicator.saved{background:#e6f9f0;color:var(--success)}
+  .sync-indicator.error{background:#fde8e5;color:var(--red)}
+
+  /* Cards & components */
+  .card{background:var(--white);border-radius:14px;padding:20px 24px;border:1px solid var(--mid-grey-3);box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+  .card-title{font-size:14px;font-weight:600;color:var(--primary-dark);margin-bottom:16px}
+  .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;white-space:nowrap;letter-spacing:0.2px}
+  .badge.sm{padding:2px 8px;font-size:11px}
+  .badge-pass{color:var(--success);background:#e6f9f0;border:1px solid rgba(53,210,139,0.13)}
+  .badge-fail{color:var(--red);background:#fde8e5;border:1px solid rgba(222,33,7,0.13)}
+  .badge-notstarted{color:var(--dark-grey);background:var(--light-grey);border:1px solid rgba(92,96,103,0.13)}
+  .badge-retest{color:var(--orange);background:#fff3e0;border:1px solid rgba(251,149,40,0.13)}
+  .badge-abandoned{color:var(--mid-grey-2);background:#f0f0f0;border:1px solid rgba(221,223,228,0.13)}
+  .badge-inprogress{color:var(--light-blue);background:#e8f4fb;border:1px solid rgba(19,145,210,0.13)}
+  .status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px}
+  .status-card{background:var(--white);border-radius:14px;padding:16px 18px;text-align:center;border:1px solid var(--mid-grey-3);box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+  .status-card .num{font-size:28px;font-weight:700}
+  .status-card .lbl{font-size:12px;color:var(--dark-grey);font-weight:500}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+  .tc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+  .tester-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+  .progress-track{width:100%;border-radius:6px;background:var(--mid-grey-3);overflow:hidden}
+  .progress-track.sm{height:4px}.progress-track.md{height:6px}
+  .progress-fill{height:100%;border-radius:6px;transition:width 0.4s cubic-bezier(0.4,0,0.2,1)}
+  .tc-mini{padding:12px 16px;border-radius:10px;cursor:pointer;border:1px solid var(--mid-grey-3);background:var(--white);transition:all 0.15s}
+  .tc-mini:hover{box-shadow:0 2px 8px rgba(66,0,79,0.1)}
+  .tc-mini.fail-bg{background:#fef5f4;border-color:rgba(222,33,7,0.2)}
+  .tc-mini.pass-bg{background:#f5fcf8;border-color:rgba(53,210,139,0.2)}
+  .tc-mini-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+  .tc-mini-id{font-size:12px;font-weight:700;color:var(--primary-dark)}
+  .tc-mini-desc{font-size:12px;color:var(--dark-grey);line-height:1.4;margin-bottom:8px}
+  .tc-mini-steps{font-size:11px;color:var(--dark-grey);margin-top:4px}
+  .filters{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+  .filter-select{padding:8px 14px;border-radius:8px;border:1px solid var(--mid-grey-2);font-size:13px;font-family:inherit;background:var(--white);color:var(--black);cursor:pointer}
+  .btn-export{padding:8px 16px;border-radius:8px;border:1px solid var(--secondary-dark);background:var(--secondary-light);color:var(--secondary-dark-2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
+  .accordion{display:flex;flex-direction:column;gap:10px}
+  .acc-item{background:var(--white);border-radius:14px;overflow:hidden;border:1px solid var(--mid-grey-3);box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+  .acc-header{padding:16px 20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;transition:background 0.2s;user-select:none}
+  .acc-header:hover,.acc-header.expanded{background:var(--primary-light)}
+  .acc-header-left{display:flex;align-items:center;gap:12px;flex:1}
+  .tc-id-badge{font-size:13px;font-weight:700;color:var(--primary-dark);background:var(--primary-high-light);padding:3px 10px;border-radius:6px;min-width:52px;text-align:center}
+  .acc-header-right{display:flex;align-items:center;gap:10px}
+  .chevron{font-size:12px;color:var(--dark-grey);transition:transform 0.2s;display:inline-block}
+  .chevron.open{transform:rotate(180deg)}
+  .acc-body{padding:0 20px 20px}
+  .preconditions{background:var(--secondary-light);border-radius:8px;padding:10px 14px;margin-top:12px;margin-bottom:16px;font-size:12px;color:var(--secondary-dark-2);border:1px solid rgba(5,213,198,0.13)}
+  .preconditions strong{font-weight:600}
+  .step-card{border-radius:10px;padding:16px;margin-bottom:10px;border:1px solid var(--mid-grey-3);background:var(--light-grey)}
+  .step-card.pass-step{background:#f8fdf9;border-color:rgba(53,210,139,0.13)}
+  .step-card.fail-step{background:#fef8f7;border-color:rgba(222,33,7,0.13)}
+  .step-label{font-size:12px;font-weight:600;color:var(--primary-dark);margin-bottom:4px}
+  .step-text{font-size:13px}
+  .expected-box{font-size:12px;color:var(--dark-grey);margin-bottom:12px;padding:8px 12px;background:var(--white);border-radius:6px;border:1px solid var(--mid-grey-3);margin-top:10px}
+  .expected-box strong{font-weight:600;color:var(--primary-dark)}
+  .fields-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .field-label{font-size:11px;font-weight:600;color:var(--dark-grey);display:block;margin-bottom:4px}
+  .field-input{width:100%;padding:7px 10px;border-radius:6px;border:1px solid var(--mid-grey-2);font-size:12px;font-family:inherit;background:var(--white);color:var(--black)}
+  select.field-input{cursor:pointer}textarea.field-input{resize:vertical}
+  .field-row{margin-top:10px}
+  .tester-card-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .tester-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--primary-dark),var(--secondary));display:flex;align-items:center;justify-content:center;color:var(--white);font-weight:700;font-size:16px}
+  .tester-stats-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px}
+  .tester-stat{text-align:center;padding:8px;border-radius:8px}
+  .tester-stat .num{font-size:20px;font-weight:700}
+  .tester-stat .lbl{font-size:11px;color:var(--dark-grey)}
+  .donut-wrap{display:flex;flex-direction:column;align-items:center}
+  .donut-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:16px;justify-content:center}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--dark-grey)}
+  .legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+  .cat-row{margin-bottom:14px}
+  .cat-header{display:flex;justify-content:space-between;margin-bottom:5px}
+  .cat-name{font-size:13px;font-weight:500}
+  .cat-count{font-size:12px;color:var(--dark-grey)}
+  .cat-fail{font-size:11px;color:var(--red);margin-top:3px;font-weight:500}
+  .hidden{display:none}
+  .last-sync{font-size:11px;opacity:0.5;margin-top:4px}
+  @media(max-width:768px){.two-col{grid-template-columns:1fr}.fields-grid{grid-template-columns:1fr}.header{padding:20px 16px 0}.main{padding:16px 16px 40px}.header h1{font-size:24px}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="screen-login" class="login-screen">
+  <div class="login-card">
+    <div class="login-label">User Acceptance Testing</div>
+    <h1>Email Triage</h1>
+    <p>Sign in with your Microsoft 365 account to access the UAT dashboard and update test results in real time.</p>
+    <button class="login-btn" onclick="signIn()">Sign in with Microsoft</button>
+    <div id="loginError" class="login-error hidden"></div>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div id="screen-config" class="config-panel hidden">
+  <div class="config-card">
+    <h2>Configure SharePoint Connection</h2>
+    <p class="sub">Tell the dashboard where your Excel file lives. This is saved in your browser — you only need to do this once.</p>
+    <div class="config-field">
+      <label>SharePoint Site Host</label>
+      <input id="cfgSiteHost" placeholder="yourcompany.sharepoint.com" />
+      <div class="hint">Just the domain, no https://</div>
+    </div>
+    <div class="config-field">
+      <label>Site Path</label>
+      <input id="cfgSitePath" placeholder="/sites/YourSite" />
+      <div class="hint">e.g. /sites/ProjectTeam</div>
+    </div>
+    <div class="config-field">
+      <label>File Path in Document Library</label>
+      <input id="cfgFilePath" placeholder="/Shared Documents/UAT_Email_Triage_Source.xlsx" />
+      <div class="hint">Full path including filename</div>
+    </div>
+    <div class="config-field">
+      <label>Sheet Name</label>
+      <input id="cfgSheetName" value="Test Scenarios" />
+    </div>
+    <div id="configError" class="login-error hidden"></div>
+    <div class="config-actions">
+      <button class="btn-primary" onclick="saveConfig()">Connect &amp; Load Data</button>
+      <button class="btn-secondary" onclick="signOut()">Sign Out</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="screen-app" class="hidden">
+  <div class="header">
+    <div class="header-inner">
+      <div class="header-top">
+        <div>
+          <div class="header-label">User Acceptance Testing</div>
+          <h1>Email Triage</h1>
+          <div class="header-sub" id="headerSubtitle">Loading...</div>
+          <div class="last-sync">Signed in as <span id="userName"></span> · Last synced: <span id="lastSync">—</span></div>
+        </div>
+        <div style="text-align:right">
+          <div class="header-stats">
+            <div class="stat-box"><div class="label">Overall Progress</div><div class="value teal" id="headerProgress">0%</div></div>
+            <div class="stat-box"><div class="label">Steps Completed</div><div class="value"><span id="headerCompleted">0</span><span class="of" id="headerTotal">/0</span></div></div>
+          </div>
+          <div class="header-actions">
+            <button class="btn-header" onclick="refreshData()">↻ Refresh from Excel</button>
+            <button class="btn-header" onclick="exportCSV()">↓ Export CSV</button>
+            <button class="btn-header" onclick="reconfigure()">⚙ Settings</button>
+            <button class="btn-header" onclick="signOut()">Sign Out</button>
+          </div>
+        </div>
+      </div>
+      <div id="syncStatus" style="margin-top:8px"></div>
+      <div class="nav-tabs">
+        <button class="nav-tab active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+        <button class="nav-tab" data-tab="tests" onclick="switchTab('tests')">Test Cases</button>
+        <button class="nav-tab" data-tab="testers" onclick="switchTab('testers')">Testers</button>
+      </div>
+    </div>
+  </div>
+  <div class="main">
+    <div id="loadingBar" class="loading-bar hidden"><div class="fill"></div></div>
+    <div id="view-dashboard"></div>
+    <div id="view-tests" class="hidden"></div>
+    <div id="view-testers" class="hidden"></div>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+// CONFIGURATION — UPDATE THESE 3 VALUES
+//
+// 1. clientId:    Your Azure AD Application (client) ID
+//                 e.g. "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+//
+// 2. tenantId:    Your Azure AD Directory (tenant) ID
+//                 e.g. "f9a8b7c6-d5e4-3210-fedc-ba0987654321"
+//
+// 3. redirectUri: Your GitHub Pages URL
+//                 e.g. "https://yourusername.github.io/uat-dashboard/"
+//
+// IMPORTANT: The redirectUri below must ALSO be added in Azure Portal →
+//            App Registration → Authentication → SPA Redirect URIs
+// =====================================================================
+const CLIENT_ID   = "PASTE_YOUR_CLIENT_ID_HERE";
+const TENANT_ID   = "PASTE_YOUR_TENANT_ID_HERE";
+const REDIRECT_URI = "PASTE_YOUR_GITHUB_PAGES_URL_HERE";
+// =====================================================================
+
+const MSAL_CONFIG = {
+  auth: { clientId: CLIENT_ID, authority: "https://login.microsoftonline.com/" + TENANT_ID, redirectUri: REDIRECT_URI },
+  cache: { cacheLocation: "localStorage" }
+};
+
+const GRAPH_SCOPES=["Files.ReadWrite.All","Sites.ReadWrite.All"];
+const STATUSES=["Not Started","Pass","Fail","Ready for Retest","Abandoned"];
+const TESTERS=["Unassigned","Adam O","Amanda O","Tester 3","Tester 4","Tester 5"];
+const STATUS_ICONS={Pass:"✓",Fail:"✕","Not Started":"○","Ready for Retest":"↻",Abandoned:"—","In Progress":"◉"};
+const STATUS_CLASS={Pass:"badge-pass",Fail:"badge-fail","Not Started":"badge-notstarted","Ready for Retest":"badge-retest",Abandoned:"badge-abandoned","In Progress":"badge-inprogress"};
+const STATUS_COLORS={Pass:"#35d28b",Fail:"#de2107","Not Started":"#5c6067","Ready for Retest":"#fb9528",Abandoned:"#dddfe4"};
+const CATEGORIES={
+  "Ticket Creation":["TC_01","TC_02"],"Classification":["TC_03","TC_04","TC_05","TC_06","TC_07"],
+  "Team Routing":["TC_08","TC_09"],"Data Enrichment":["TC_10","TC_11","TC_12","TC_13"],
+  "End-to-End":["TC_14"],"Edge Cases":["TC_15","TC_16","TC_17"],
+  "Performance & Resilience":["TC_18","TC_19","TC_20"],
+};
+const COL={id:0,scenario:1,preconditions:2,step:3,expected:4,actual:5,status:6,tester:7,date:8,comments:9};
+const COL_LETTER={actual:"F",status:"G",tester:"H",date:"I",comments:"J"};
+
+let msalApp=null,accessToken=null,currentAccount=null;
+let spConfig=null,worksheetId=null,graphBase="";
+let testCases=[],currentTab="dashboard",expandedTC=null;
+let filterStatus="All",filterCategory="All";
+let saveQueue=[],isSaving=false;
+
+// ---- MSAL Auth (redirect flow — works everywhere) ----
+async function initMSAL(){
+  msalApp=new msal.PublicClientApplication(MSAL_CONFIG);
+  try{
+    const resp=await msalApp.handleRedirectPromise();
+    if(resp){currentAccount=resp.account;accessToken=resp.accessToken;showScreen('config');loadSavedConfig();return}
+  }catch(e){console.error('Redirect error:',e)}
+  const accts=msalApp.getAllAccounts();
+  if(accts.length>0){currentAccount=accts[0];try{await acquireTokenSilent();showScreen('config');loadSavedConfig()}catch(e){showScreen('login')}}
+  else showScreen('login');
+}
+
+async function acquireTokenSilent(){const r=await msalApp.acquireTokenSilent({scopes:GRAPH_SCOPES,account:currentAccount});accessToken=r.accessToken;return r}
+
+async function acquireToken(){
+  try{return await acquireTokenSilent()}
+  catch(e){msalApp.acquireTokenRedirect({scopes:GRAPH_SCOPES});throw new Error('Redirecting for auth...')}
+}
+
+async function signIn(){try{hideEl('loginError');msalApp.loginRedirect({scopes:GRAPH_SCOPES})}catch(e){showEl('loginError');document.getElementById('loginError').textContent="Sign-in failed: "+(e.message||e)}}
+function signOut(){localStorage.removeItem('uat-sp-config');msalApp.logoutRedirect()}
+function reconfigure(){showScreen('config');loadSavedConfig()}
+
+// ---- Config ----
+function loadSavedConfig(){
+  try{const s=JSON.parse(localStorage.getItem('uat-sp-config'));
+  if(s){document.getElementById('cfgSiteHost').value=s.siteHost||'';document.getElementById('cfgSitePath').value=s.sitePath||'';document.getElementById('cfgFilePath').value=s.filePath||'';document.getElementById('cfgSheetName').value=s.sheetName||'Test Scenarios';saveConfig()}}catch(e){}
+}
+
+async function saveConfig(){
+  const cfg={siteHost:document.getElementById('cfgSiteHost').value.trim(),sitePath:document.getElementById('cfgSitePath').value.trim(),filePath:document.getElementById('cfgFilePath').value.trim(),sheetName:document.getElementById('cfgSheetName').value.trim()||'Test Scenarios'};
+  if(!cfg.siteHost||!cfg.sitePath||!cfg.filePath){showEl('configError');document.getElementById('configError').textContent='Please fill in all fields.';return}
+  hideEl('configError');spConfig=cfg;localStorage.setItem('uat-sp-config',JSON.stringify(cfg));
+  try{await acquireToken();await resolveFileIds();await loadExcelData();document.getElementById('userName').textContent=currentAccount.name||currentAccount.username;showScreen('app');render()}
+  catch(e){showEl('configError');document.getElementById('configError').textContent='Connection failed: '+(e.message||e);console.error(e)}
+}
+
+// ---- Graph API ----
+async function graphGet(url){await acquireToken();const r=await fetch(url,{headers:{Authorization:`Bearer ${accessToken}`}});if(!r.ok)throw new Error(`Graph ${r.status}: ${await r.text()}`);return r.json()}
+async function graphPatch(url,body){await acquireToken();const r=await fetch(url,{method:'PATCH',headers:{Authorization:`Bearer ${accessToken}`,'Content-Type':'application/json'},body:JSON.stringify(body)});if(!r.ok)throw new Error(`Graph ${r.status}: ${await r.text()}`);return r.json()}
+
+async function resolveFileIds(){
+  const site=await graphGet(`https://graph.microsoft.com/v1.0/sites/${spConfig.siteHost}:${spConfig.sitePath}`);
+  const drives=await graphGet(`https://graph.microsoft.com/v1.0/sites/${site.id}/drives`);
+  const drive=drives.value[0];
+  const item=await graphGet(`https://graph.microsoft.com/v1.0/sites/${site.id}/drives/${drive.id}/root:${spConfig.filePath}`);
+  graphBase=`https://graph.microsoft.com/v1.0/sites/${site.id}/drives/${drive.id}/items/${item.id}/workbook/worksheets`;
+  const sheets=await graphGet(graphBase);
+  const ws=sheets.value.find(s=>s.name===spConfig.sheetName);
+  if(!ws)throw new Error(`Sheet "${spConfig.sheetName}" not found. Found: ${sheets.value.map(s=>s.name).join(', ')}`);
+  worksheetId=ws.id;
+}
+
+// ---- Excel Read/Write ----
+async function loadExcelData(){
+  showLoading(true);setSyncStatus('saving','Loading from Excel...');
+  const data=await graphGet(`${graphBase}/${worksheetId}/usedRange`);
+  const rows=data.values||[];if(rows.length<2)throw new Error('No data in sheet');
+  testCases=[];let cur=null;
+  rows.slice(1).forEach((row,idx)=>{
+    const tcId=(row[COL.id]||'').toString().trim();
+    if(tcId&&tcId.startsWith('TC_')){if(cur)testCases.push(cur);cur={id:tcId,scenario:row[COL.scenario]||'',preconditions:row[COL.preconditions]||'',steps:[]};}
+    if(cur)cur.steps.push({rowIndex:idx+2,step:row[COL.step]||'',expected:row[COL.expected]||'',actual:row[COL.actual]||'',status:row[COL.status]||'Not Started',tester:row[COL.tester]||'Unassigned',date:row[COL.date]||'',comments:row[COL.comments]||''});
+  });
+  if(cur)testCases.push(cur);
+  const ts=testCases.reduce((s,tc)=>s+tc.steps.length,0);
+  document.getElementById('headerSubtitle').textContent=`${testCases.length} test scenarios · ${ts} test steps · Zoho Desk + Fleetio + CRM`;
+  document.getElementById('headerTotal').textContent=`/${ts}`;
+  document.getElementById('lastSync').textContent=new Date().toLocaleTimeString();
+  setSyncStatus('saved','Synced with Excel');showLoading(false);
+}
+
+async function writeCell(row,col,val){await graphPatch(`${graphBase}/${worksheetId}/range(address='${col}${row}')`,{values:[[val||'']]})}
+
+function queueSave(tcId,si,field,val){
+  const tc=testCases.find(t=>t.id===tcId);if(!tc||!tc.steps[si])return;
+  tc.steps[si][field]=val;
+  const row=tc.steps[si].rowIndex,col=COL_LETTER[field];if(!col)return;
+  saveQueue=saveQueue.filter(s=>!(s.row===row&&s.col===col));
+  saveQueue.push({row,col,value:val});render();debouncedFlush();
+}
+
+let saveTimer=null;
+function debouncedFlush(){if(saveTimer)clearTimeout(saveTimer);saveTimer=setTimeout(flushSaves,800)}
+
+async function flushSaves(){
+  if(isSaving||!saveQueue.length)return;
+  isSaving=true;setSyncStatus('saving',`Saving ${saveQueue.length} change${saveQueue.length>1?'s':''}...`);
+  const batch=[...saveQueue];saveQueue=[];
+  try{for(const i of batch)await writeCell(i.row,i.col,i.value);document.getElementById('lastSync').textContent=new Date().toLocaleTimeString();setSyncStatus('saved','All changes saved')}
+  catch(e){console.error(e);setSyncStatus('error','Save failed — click Refresh');saveQueue.push(...batch)}
+  isSaving=false;if(saveQueue.length)flushSaves();
+}
+
+async function refreshData(){try{await loadExcelData();render()}catch(e){setSyncStatus('error','Refresh failed: '+e.message)}}
+
+function exportCSV(){let c="Test ID,Scenario,Step #,Test Step,Expected,Actual,Status,Tester,Date,Comments\n";testCases.forEach(tc=>{tc.steps.forEach((s,i)=>{c+=[tc.id,`"${tc.scenario}"`,i+1,`"${s.step}"`,`"${s.expected}"`,`"${s.actual}"`,s.status,s.tester,s.date,`"${s.comments}"`].join(",")+"\n"})});const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([c],{type:'text/csv'}));a.download='UAT_Email_Triage_Results.csv';a.click()}
+
+// ---- UI ----
+function showScreen(n){['login','config','app'].forEach(s=>document.getElementById('screen-'+s).classList.toggle('hidden',s!==n))}
+function showEl(id){document.getElementById(id).classList.remove('hidden')}
+function hideEl(id){document.getElementById(id).classList.add('hidden')}
+function showLoading(s){document.getElementById('loadingBar').classList.toggle('hidden',!s)}
+function setSyncStatus(t,m){document.getElementById('syncStatus').innerHTML=`<span class="sync-indicator ${t}">${t==='saving'?'◌':t==='saved'?'✓':'⚠'} ${m}</span>`;if(t==='saved')setTimeout(()=>{document.getElementById('syncStatus').innerHTML=''},4000)}
+
+function allSteps(){return testCases.flatMap(tc=>tc.steps.map(s=>({...s,tcId:tc.id})))}
+function statusCounts(){const c={};STATUSES.forEach(s=>c[s]=0);allSteps().forEach(s=>c[s.status]=(c[s.status]||0)+1);return c}
+function tcStatus(tc){if(tc.steps.every(s=>s.status==="Pass"))return"Pass";if(tc.steps.some(s=>s.status==="Fail"))return"Fail";if(tc.steps.some(s=>s.status==="Ready for Retest"))return"Ready for Retest";if(tc.steps.every(s=>s.status==="Not Started"))return"Not Started";return"In Progress"}
+function bdg(st,sm){return`<span class="badge ${STATUS_CLASS[st]||'badge-notstarted'} ${sm?'sm':''}">${STATUS_ICONS[st]||'○'} ${st}</span>`}
+function pb(v,m,c,cl){const p=m>0?(v/m*100):0;return`<div class="progress-track ${cl||'md'}"><div class="progress-fill" style="width:${p}%;background:${c}"></div></div>`}
+function donutSVG(d,sz){const t=d.reduce((s,x)=>s+x.value,0);if(!t)return'';const cx=sz/2,cy=sz/2,r=sz*.38,sw=sz*.14;let cm=0;const pr=Math.round(((d.find(x=>x.label==="Pass")||{value:0}).value/t)*100);let p=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#eaecf0" stroke-width="${sw}"/>`;d.filter(x=>x.value>0).forEach(x=>{const s0=cm/t,a0=s0*2*Math.PI-Math.PI/2;cm+=x.value;const s1=cm/t,a1=s1*2*Math.PI-Math.PI/2,lg=(s1-s0)>.5?1:0;p+=`<path d="M ${cx+r*Math.cos(a0)} ${cy+r*Math.sin(a0)} A ${r} ${r} 0 ${lg} 1 ${cx+r*Math.cos(a1)} ${cy+r*Math.sin(a1)}" fill="none" stroke="${x.color}" stroke-width="${sw}"/>`});return`<svg width="${sz}" height="${sz}" viewBox="0 0 ${sz} ${sz}">${p}<text x="${cx}" y="${cy-6}" text-anchor="middle" fill="#03040b" font-size="${sz*.2}" font-weight="700" font-family="'DM Sans',sans-serif">${pr}%</text><text x="${cx}" y="${cy+12}" text-anchor="middle" fill="#5c6067" font-size="${sz*.09}" font-weight="500" font-family="'DM Sans',sans-serif">pass rate</text></svg>`}
+
+function switchTab(t){currentTab=t;document.querySelectorAll('.nav-tab').forEach(n=>n.classList.toggle('active',n.dataset.tab===t));['dashboard','tests','testers'].forEach(v=>document.getElementById('view-'+v).classList.toggle('hidden',v!==t));render()}
+function updateStep(tcId,si,f,v){queueSave(tcId,si,f,v)}
+function toggleTC(id){expandedTC=expandedTC===id?null:id;render()}
+function openTC(id){expandedTC=id;switchTab('tests')}
+
+// ---- Renderers ----
+function render(){
+  const sc=statusCounts(),steps=allSteps(),total=steps.length,done=(sc.Pass||0)+(sc.Fail||0)+(sc.Abandoned||0);
+  document.getElementById('headerProgress').textContent=(total>0?Math.round(done/total*100):0)+'%';
+  document.getElementById('headerCompleted').textContent=done;
+  if(currentTab==='dashboard')renderDash(sc);else if(currentTab==='tests')renderTests();else renderTesters();
+}
+
+function renderDash(sc){
+  const dd=[{label:"Pass",value:sc.Pass||0,color:"#35d28b"},{label:"Fail",value:sc.Fail||0,color:"#de2107"},{label:"Ready for Retest",value:sc["Ready for Retest"]||0,color:"#fb9528"},{label:"Not Started",value:sc["Not Started"]||0,color:"#dddfe4"},{label:"Abandoned",value:sc.Abandoned||0,color:"#aaa"}];
+  let h=`<div class="status-grid">`;STATUSES.forEach(s=>{h+=`<div class="status-card" style="border-left:4px solid ${STATUS_COLORS[s]}"><div class="num" style="color:${STATUS_COLORS[s]}">${sc[s]||0}</div><div class="lbl">${s}</div></div>`});
+  h+=`</div><div class="two-col"><div class="card"><div class="card-title">Test Step Results</div><div class="donut-wrap">${donutSVG(dd,160)}<div class="donut-legend">`;
+  dd.filter(d=>d.value>0).forEach(d=>{h+=`<div class="legend-item"><span class="legend-dot" style="background:${d.color}"></span>${d.label} (${d.value})</div>`});
+  h+=`</div></div></div><div class="card"><div class="card-title">Category Progress</div>`;
+  Object.entries(CATEGORIES).forEach(([cat,ids])=>{const cs=testCases.filter(tc=>ids.includes(tc.id)).flatMap(tc=>tc.steps);const p=cs.filter(s=>s.status==="Pass").length,f=cs.filter(s=>s.status==="Fail").length,t=cs.length;h+=`<div class="cat-row"><div class="cat-header"><span class="cat-name">${cat}</span><span class="cat-count">${p}/${t} passed</span></div>${pb(p,t,"#05d5c6")}${f>0?`<div class="cat-fail">${f} failed</div>`:''}</div>`});
+  h+=`</div></div><div class="card"><div class="card-title" style="display:flex;justify-content:space-between"><span>All Test Cases</span><button class="btn-export" onclick="exportCSV()">↓ Export CSV</button></div><div class="tc-grid">`;
+  testCases.forEach(tc=>{const st=tcStatus(tc),p=tc.steps.filter(s=>s.status==="Pass").length;h+=`<div class="tc-mini ${st==='Fail'?'fail-bg':st==='Pass'?'pass-bg':''}" onclick="openTC('${tc.id}')"><div class="tc-mini-header"><span class="tc-mini-id">${tc.id}</span>${bdg(st,true)}</div><div class="tc-mini-desc">${tc.scenario}</div>${pb(p,tc.steps.length,"#35d28b","sm")}<div class="tc-mini-steps">${p}/${tc.steps.length} steps passed</div></div>`});
+  h+=`</div></div>`;document.getElementById('view-dashboard').innerHTML=h;
+}
+
+function renderTests(){
+  let h=`<div class="filters"><select class="filter-select" onchange="filterStatus=this.value;render()"><option value="All"${filterStatus==='All'?' selected':''}>All Statuses</option>`;
+  [...STATUSES,"In Progress"].forEach(s=>{h+=`<option value="${s}"${filterStatus===s?' selected':''}>${s}</option>`});
+  h+=`</select><select class="filter-select" onchange="filterCategory=this.value;render()"><option value="All"${filterCategory==='All'?' selected':''}>All Categories</option>`;
+  Object.keys(CATEGORIES).forEach(c=>{h+=`<option value="${c}"${filterCategory===c?' selected':''}>${c}</option>`});
+  h+=`</select></div><div class="accordion">`;
+
+  testCases.filter(tc=>{const st=tcStatus(tc);if(filterStatus!=="All"&&st!==filterStatus)return false;if(filterCategory!=="All"&&!(CATEGORIES[filterCategory]||[]).includes(tc.id))return false;return true}).forEach(tc=>{
+    const st=tcStatus(tc),isO=expandedTC===tc.id,bc=st==="Fail"?"#de2107":st==="Pass"?"#35d28b":st==="In Progress"?"#1391d2":"#dddfe4";
+    h+=`<div class="acc-item" style="border-left:4px solid ${bc}"><div class="acc-header ${isO?'expanded':''}" onclick="toggleTC('${tc.id}')"><div class="acc-header-left"><span class="tc-id-badge">${tc.id}</span><span style="font-size:14px;font-weight:500">${tc.scenario}</span></div><div class="acc-header-right">${bdg(st)}<span class="chevron ${isO?'open':''}">▼</span></div></div>`;
+    if(isO){
+      h+=`<div class="acc-body">`;
+      if(tc.preconditions)h+=`<div class="preconditions"><strong>Pre-conditions: </strong>${tc.preconditions.replace(/\n/g,' · ')}</div>`;
+      tc.steps.forEach((s,si)=>{
+        const scl=s.status==="Fail"?"fail-step":s.status==="Pass"?"pass-step":"";
+        h+=`<div class="step-card ${scl}"><div class="step-label">Step ${si+1}</div><div class="step-text">${s.step}</div><div class="expected-box"><strong>Expected: </strong>${s.expected}</div><div class="fields-grid"><div><label class="field-label">Status</label><select class="field-input" onchange="updateStep('${tc.id}',${si},'status',this.value)">`;
+        STATUSES.forEach(st=>{h+=`<option value="${st}"${s.status===st?' selected':''}>${st}</option>`});
+        h+=`</select></div><div><label class="field-label">Tester</label><select class="field-input" onchange="updateStep('${tc.id}',${si},'tester',this.value)">`;
+        TESTERS.forEach(t=>{h+=`<option value="${t}"${s.tester===t?' selected':''}>${t}</option>`});
+        h+=`</select></div><div><label class="field-label">Date</label><input type="date" class="field-input" value="${s.date}" onchange="updateStep('${tc.id}',${si},'date',this.value)"></div></div>`;
+        h+=`<div class="field-row"><label class="field-label">Actual Result</label><textarea class="field-input" rows="2" placeholder="Enter actual result..." onchange="updateStep('${tc.id}',${si},'actual',this.value)">${s.actual}</textarea></div>`;
+        h+=`<div class="field-row"><label class="field-label">Comments</label><textarea class="field-input" rows="1" placeholder="Add notes..." onchange="updateStep('${tc.id}',${si},'comments',this.value)">${s.comments}</textarea></div></div>`;
+      });
+      h+=`</div>`;
+    }
+    h+=`</div>`;
+  });
+  h+=`</div>`;document.getElementById('view-tests').innerHTML=h;
+}
+
+function renderTesters(){
+  const st={};allSteps().forEach(s=>{if(!st[s.tester])st[s.tester]={total:0,pass:0,fail:0,other:0};st[s.tester].total++;if(s.status==="Pass")st[s.tester].pass++;else if(s.status==="Fail")st[s.tester].fail++;else st[s.tester].other++});
+  let h=`<div class="tester-grid">`;
+  Object.entries(st).forEach(([t,s])=>{const r=s.total>0?Math.round(s.pass/s.total*100):0;h+=`<div class="card"><div class="tester-card-header"><div class="tester-avatar">${t[0]}</div><div><div style="font-weight:600;font-size:15px">${t}</div><div style="font-size:12px;color:var(--dark-grey)">${s.total} steps assigned</div></div></div><div class="tester-stats-grid"><div class="tester-stat" style="background:#e6f9f0"><div class="num" style="color:#35d28b">${s.pass}</div><div class="lbl">Passed</div></div><div class="tester-stat" style="background:#fde8e5"><div class="num" style="color:#de2107">${s.fail}</div><div class="lbl">Failed</div></div><div class="tester-stat" style="background:#f5f5f9"><div class="num" style="color:#5c6067">${s.other}</div><div class="lbl">Other</div></div></div><div style="font-size:12px;color:var(--dark-grey);margin-bottom:6px">Pass rate: <strong style="color:var(--primary-dark)">${r}%</strong></div>${pb(s.pass,s.total,"#35d28b")}</div>`});
+  h+=`</div>`;document.getElementById('view-testers').innerHTML=h;
+}
+
+// ---- Init ----
+initMSAL();
+</script>
+</body>
+</html>
