@@ -281,7 +281,7 @@ let saveQueue=[],isSaving=false;
 
 // ---- MSAL Auth (redirect flow — works everywhere) ----
 async function initMSAL(){
-  msalApp=new msal.PublicClientApplication(MSAL_CONFIG);
+  const msalLib = window.msal || window.msal2 || window; msalApp=new msalLib.PublicClientApplication(MSAL_CONFIG);
   await msalApp.initialize();
   try{
     const resp=await msalApp.handleRedirectPromise();
