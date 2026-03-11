@@ -387,9 +387,8 @@ function renderDash(sc){
 function renderTests(){
   let h=`<div class="filters"><select class="filter-select" onchange="filterStatus=this.value;render()"><option value="All"${filterStatus==='All'?' selected':''}>All Statuses</option>`;
   [...STATUSES,"In Progress"].forEach(s=>{h+=`<option value="${s}"${filterStatus===s?' selected':''}>${s}</option>`});
-  h+=`<select class="filter-select" onchange="filterTester=this.value;render()"><option value="All"${filterTester==='All'?' selected':''}>All Testers</option>`;
+  h+=`</select><select class="filter-select" onchange="filterTester=this.value;render()"><option value="All"${filterTester==='All'?' selected':''}>All Testers</option>`;
   TESTERS.forEach(t=>{h+=`<option value="${t}"${filterTester===t?' selected':''}>${t}</option>`});
-  h+=`</select>`;
   h+=`</select>`;
   if(Object.keys(CATEGORIES).length>0){
     h+=`<select class="filter-select" onchange="filterCategory=this.value;render()"><option value="All"${filterCategory==='All'?' selected':''}>All Categories</option>`;
