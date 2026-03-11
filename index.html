@@ -211,7 +211,7 @@ let projectConfig={name:"UAT Dashboard",title:"",subtitle:"",startDate:"",endDat
 let TESTERS=["Unassigned"];
 let CATEGORIES={};
 let testCases=[],currentTab="dashboard",expandedTC=null;
-let filterStatus="All",filterCategory="All";
+let filterStatus="All",filterCategory="All",filterTester="All";
 let saveQueue=[],isSaving=false;
 let testScenariosWsId=null;
 
@@ -387,6 +387,9 @@ function renderDash(sc){
 function renderTests(){
   let h=`<div class="filters"><select class="filter-select" onchange="filterStatus=this.value;render()"><option value="All"${filterStatus==='All'?' selected':''}>All Statuses</option>`;
   [...STATUSES,"In Progress"].forEach(s=>{h+=`<option value="${s}"${filterStatus===s?' selected':''}>${s}</option>`});
+  h+=`<select class="filter-select" onchange="filterTester=this.value;render()"><option value="All"${filterTester==='All'?' selected':''}>All Testers</option>`;
+  TESTERS.forEach(t=>{h+=`<option value="${t}"${filterTester===t?' selected':''}>${t}</option>`});
+  h+=`</select>`;
   h+=`</select>`;
   if(Object.keys(CATEGORIES).length>0){
     h+=`<select class="filter-select" onchange="filterCategory=this.value;render()"><option value="All"${filterCategory==='All'?' selected':''}>All Categories</option>`;
@@ -394,7 +397,7 @@ function renderTests(){
     h+=`</select>`;
   }
   h+=`</div><div class="accordion">`;
-  testCases.filter(tc=>{const st=tcStatus(tc);if(filterStatus!=="All"&&st!==filterStatus)return false;if(filterCategory!=="All"&&Object.keys(CATEGORIES).length>0&&!(CATEGORIES[filterCategory]||[]).includes(tc.id))return false;return true}).forEach(tc=>{
+  testCases.filter(tc=>{const st=tcStatus(tc);if(filterStatus!=="All"&&st!==filterStatus)return false;if(filterCategory!=="All"&&Object.keys(CATEGORIES).length>0&&!(CATEGORIES[filterCategory]||[]).includes(tc.id))return false;if(filterTester!=="All"&&!tc.steps.some(s=>s.tester===filterTester))return false;return true}).forEach(tc=>{
     const st=tcStatus(tc),isO=expandedTC===tc.id,bc=st==="Fail"?"#de2107":st==="Pass"?"#35d28b":st==="In Progress"?"#1391d2":"#dddfe4";
     h+=`<div class="acc-item" style="border-left:4px solid ${bc}"><div class="acc-header ${isO?'expanded':''}" onclick="toggleTC('${tc.id}')"><div class="acc-header-left"><span class="tc-id-badge">${tc.id}</span><span style="font-size:14px;font-weight:500">${tc.scenario}</span></div><div class="acc-header-right">${bdg(st)}<span class="chevron ${isO?'open':''}">▼</span></div></div>`;
     if(isO){
